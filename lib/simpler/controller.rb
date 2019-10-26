@@ -9,6 +9,7 @@ module Simpler
       @name = extract_name
       @request = Rack::Request.new(env)
       @response = Rack::Response.new
+      set_params(env)
     end
 
     def make_response(action)
@@ -20,6 +21,14 @@ module Simpler
       write_response
 
       @response.finish
+    end
+
+    def set_header(type, header)
+      @response[type] = header
+    end
+
+    def set_status(status)
+      @response.status = status
     end
 
     private
@@ -39,7 +48,12 @@ module Simpler
     end
 
     def render_body
-      View.new(@request.env).render(binding)
+      renderer = View.renderer(@request.env)
+      renderer.new(@request.env).render(binding)
+    end
+
+    def set_params(env)
+      @request.params.update(env['simpler.route_params'])
     end
 
     def params
@@ -49,6 +63,5 @@ module Simpler
     def render(template)
       @request.env['simpler.template'] = template
     end
-
   end
 end
